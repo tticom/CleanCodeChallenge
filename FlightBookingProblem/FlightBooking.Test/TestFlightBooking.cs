@@ -1,27 +1,29 @@
 using FlightBooking.Core;
+using System.Text.RegularExpressions;
+using Xunit;
 
 namespace FlightBooking.Test
 {
     public class TestFlightBooking: FlightBookingTestBase
     {
         [Fact]
-        public void Test1()
+        public void Test_Benchmark_OriginalReport()
         {
-
+            var expected = "Flight summary for London to ParisTotal passengers: 10    General sales: 6    Loyalty member sales: 3    Airline employee comps: 1Total expected baggage: 13Total revenue from flight: 800Total costs from flight: 500Flight generating profit of: 300Total loyalty points given away: 10Total loyalty points redeemed: 100THIS FLIGHT MAY PROCEED".Replace(" ", "");
+            SetupAllFlightData();
+            var report = Regex.Replace(TestFlight.GetSummary(), @"\s", "");
+            Assert.Equal(expected, report);
         }
     }
 
     public class FlightBookingTestBase : IDisposable
     {
-        private bool disposedValue;
-
         protected FlightRoute? TestRoute { get; set; }
         protected ScheduledFlight? TestFlight { get; set; }
 
         protected FlightBookingTestBase()
         {
-            SetupAirlineData();
-            SetupFlightData();
+            SetupAirlineData();            
         }
 
         private void SetupAirlineData()
@@ -40,7 +42,21 @@ namespace FlightBooking.Test
                     new Plane { Id = 123, Name = "Antonov AN-2", NumberOfSeats = 12 });
         }
 
-        private void SetupFlightData()
+        protected void SetupAllFlightData()
+        {
+            AddGeneralPassengerSteveToFlight();
+            AddGeneralPassengerMarkToFlight();
+            AddGeneralPassengerJamesToFlight();
+            AddGeneralPassengerJaneToFlight();
+            AddLoyaltyMemberPassengerJohnToFlight();
+            AddLoyaltyMemberPassengerSarahToFlight();
+            AddLoyaltyMemberPassengerJackToFlight();
+            AddAirlineEmployeePassengerTrevorToFlight();
+            AddGeneralPassengerAlanToFlight();
+            AddGeneralPassengerSuzyToFlight();
+        }
+
+        protected void AddGeneralPassengerSteveToFlight()
         {
             if (TestFlight != null)
             {
@@ -50,24 +66,52 @@ namespace FlightBooking.Test
                     Name = "Steve",
                     Age = 30
                 });
+            }
+        }
+
+        protected void AddGeneralPassengerMarkToFlight()
+        {
+            if (TestFlight != null)
+            {
                 TestFlight.AddPassenger(new Passenger
                 {
                     Type = PassengerType.General,
                     Name = "Mark",
                     Age = 12
                 });
+            }
+        }
+
+        protected void AddGeneralPassengerJamesToFlight()
+        {
+            if (TestFlight != null)
+            {
                 TestFlight.AddPassenger(new Passenger
                 {
                     Type = PassengerType.General,
                     Name = "James",
                     Age = 36
                 });
+            }
+        }
+
+        protected void AddGeneralPassengerJaneToFlight()
+        {
+            if (TestFlight != null)
+            {
                 TestFlight.AddPassenger(new Passenger
                 {
                     Type = PassengerType.General,
                     Name = "Jane",
                     Age = 32
                 });
+            }
+        }
+
+        protected void AddLoyaltyMemberPassengerJohnToFlight()
+        {
+            if (TestFlight != null)
+            {
                 TestFlight.AddPassenger(new Passenger
                 {
                     Type = PassengerType.LoyaltyMember,
@@ -76,6 +120,13 @@ namespace FlightBooking.Test
                     LoyaltyPoints = 1000,
                     IsUsingLoyaltyPoints = true
                 });
+            }
+        }
+
+        protected void AddLoyaltyMemberPassengerSarahToFlight()
+        {
+            if (TestFlight != null)
+            {
                 TestFlight.AddPassenger(new Passenger
                 {
                     Type = PassengerType.LoyaltyMember,
@@ -84,6 +135,13 @@ namespace FlightBooking.Test
                     LoyaltyPoints = 1250,
                     IsUsingLoyaltyPoints = false
                 });
+            }
+        }
+
+        protected void AddLoyaltyMemberPassengerJackToFlight()
+        {
+            if (TestFlight != null)
+            {
                 TestFlight.AddPassenger(new Passenger
                 {
                     Type = PassengerType.LoyaltyMember,
@@ -92,18 +150,39 @@ namespace FlightBooking.Test
                     LoyaltyPoints = 50,
                     IsUsingLoyaltyPoints = false
                 });
+            }
+        }
+
+        protected void AddAirlineEmployeePassengerTrevorToFlight()
+        {
+            if (TestFlight != null)
+            {
                 TestFlight.AddPassenger(new Passenger
                 {
                     Type = PassengerType.AirlineEmployee,
                     Name = "Trevor",
                     Age = 47
                 });
+            }
+        }
+
+        protected void AddGeneralPassengerAlanToFlight()
+        {
+            if (TestFlight != null)
+            {
                 TestFlight.AddPassenger(new Passenger
                 {
                     Type = PassengerType.General,
                     Name = "Alan",
                     Age = 34
                 });
+            }
+        }
+
+        protected void AddGeneralPassengerSuzyToFlight()
+        {
+            if (TestFlight != null)
+            {
                 TestFlight.AddPassenger(new Passenger
                 {
                     Type = PassengerType.General,
@@ -115,30 +194,15 @@ namespace FlightBooking.Test
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (disposing)
             {
-                if (disposing)
-                {
-                    TestFlight = null;
-                    TestRoute = null;                    
-                }
-
-                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-                // TODO: set large fields to null
-                disposedValue = true;
+                TestFlight = null;
+                TestRoute = null;                    
             }
         }
 
-        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-        // ~TestBase()
-        // {
-        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        //     Dispose(disposing: false);
-        // }
-
         void IDisposable.Dispose()
         {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
