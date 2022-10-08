@@ -27,6 +27,11 @@ namespace FlightBooking.Core
             result += INDENTATION + "Loyalty member sales: " + scheduledFlight.NoOfLoyaltyPassengers;
             result += NEW_LINE;
             result += INDENTATION + "Airline employee comps: " + scheduledFlight.NoOfEmployeePassengers;
+            if (scheduledFlight.NoOfDiscountPassengers > 0)
+            {
+                result += NEW_LINE;
+                result += INDENTATION + "Discounted sales: " + scheduledFlight.NoOfDiscountPassengers;
+            }
 
             result += VERTICAL_WHITE_SPACE;
             result += "Total expected baggage: " + scheduledFlight.TotalExpectedBaggage;

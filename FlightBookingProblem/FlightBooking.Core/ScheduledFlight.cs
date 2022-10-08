@@ -71,6 +71,14 @@ namespace FlightBooking.Core
             }
         }
 
+        public int NoOfDiscountPassengers
+        {
+            get
+            {
+                return Passengers.Count(p => p as IDiscounted != null);
+            }
+        }
+
         public double ProfitSurplus
         {
             get
