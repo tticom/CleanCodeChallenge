@@ -6,21 +6,17 @@ namespace FlightBooking.Core
 {
     public class ScheduledFlight
     {
-        private readonly string VERTICAL_WHITE_SPACE = Environment.NewLine + Environment.NewLine;
-        private readonly string NEW_LINE = Environment.NewLine;
-        private const string INDENTATION = "    ";
-
         public ScheduledFlight(FlightRoute flightRoute)
         {
             FlightRoute = flightRoute;
-            Passengers = new List<Passenger>();
+            Passengers = new List<IPassenger>();
         }
 
         public FlightRoute FlightRoute { get; private set; }
         public Plane Aircraft { get; private set; }
-        public List<Passenger> Passengers { get; private set; }
+        public List<IPassenger> Passengers { get; private set; }
 
-        public void AddPassenger(Passenger passenger)
+        public void AddPassenger(IPassenger passenger)
         {
             Passengers.Add(passenger);
         }
@@ -29,93 +25,124 @@ namespace FlightBooking.Core
         {
             Aircraft = aircraft;
         }
-        
+
+        public int SeatsTaken
+        {
+            get
+            {
+                return Passengers.Count;
+            }
+        }
+
+        public double CostOfFlights
+        {
+            get
+            {
+                return FlightRoute.BaseCost * Passengers.Count;
+            }
+        }
+
+        public int TotalExpectedBaggage { get; set; }
+        public int TotalLoyaltyPointsRedeemed { get; set; }
+        public int TotalLoyaltyPointsAccrued { get; set; }
+        public double ProfitFromFlight { get; set; }
+
+        public int NoOfGeneralPassengers
+        {
+            get
+            {
+                return Passengers.Count(p => p as IGeneralPassenger != null);
+            }
+        }
+
+        public int NoOfLoyaltyPassengers
+        {
+            get
+            {
+                return Passengers.Count(p => p as ILoyaltyPassenger != null);
+            }
+        }
+
+        public int NoOfEmployeePassengers
+        {
+            get
+            {
+                return Passengers.Count(p => p as IAirlineEmployee != null);
+            }
+        }
+
+        public double ProfitSurplus
+        {
+            get
+            {
+                return ProfitFromFlight - CostOfFlights;
+            }
+        }
+
+        public bool DecisionToProceed
+        {
+            get
+            {
+                return (ProfitSurplus > 0 &&
+                    SeatsTaken < Aircraft.NumberOfSeats &&
+                    SeatsTaken / (double)Aircraft.NumberOfSeats > FlightRoute.MinimumTakeOffPercentage);
+            }
+        }
+
         public string GetSummary()
         {
-            double costOfFlight = 0;
-            double profitFromFlight = 0;
-            int totalLoyaltyPointsAccrued = 0;
-            int totalLoyaltyPointsRedeemed = 0;
-            int totalExpectedBaggage = 0;
-            int seatsTaken = 0;
+            PerformCalculations();
+            return new FlightReport(this).ProduceReport();
+        }
 
-            string result = "Flight summary for " + FlightRoute.Title;
-
+        public void PerformCalculations()
+        {
             foreach (var passenger in Passengers)
             {
-                switch (passenger.Type)
-                {
-                    case(PassengerType.General):
-                        {
-                            profitFromFlight += FlightRoute.BasePrice;
-                            totalExpectedBaggage++;
-                            break;
-                        }
-                    case(PassengerType.LoyaltyMember):
-                        {
-                            if (passenger.IsUsingLoyaltyPoints)
-                            {
-                                int loyaltyPointsRedeemed = Convert.ToInt32(Math.Ceiling(FlightRoute.BasePrice));
-                                passenger.LoyaltyPoints -= loyaltyPointsRedeemed;
-                                totalLoyaltyPointsRedeemed += loyaltyPointsRedeemed;
-                            }
-                            else
-                            {
-                                totalLoyaltyPointsAccrued += FlightRoute.LoyaltyPointsGained;
-                                profitFromFlight += FlightRoute.BasePrice;                           
-                            }
-                            totalExpectedBaggage += 2;
-                            break;
-                        }
-                    case(PassengerType.AirlineEmployee):
-                        {
-                            totalExpectedBaggage += 1;
-                            break;
-                        }
-                }
-                costOfFlight += FlightRoute.BaseCost;
-                seatsTaken++;
+                BaggageIncrement(passenger);
+                FlightProfitCalculator(passenger);
+                LoyaltyCalculations(passenger);
             }
+        }
 
-            result += VERTICAL_WHITE_SPACE;
-            
-            result += "Total passengers: " + seatsTaken;
-            result += NEW_LINE;
-            result += INDENTATION + "General sales: " + Passengers.Count(p => p.Type == PassengerType.General);
-            result += NEW_LINE;
-            result += INDENTATION + "Loyalty member sales: " + Passengers.Count(p => p.Type == PassengerType.LoyaltyMember);
-            result += NEW_LINE;
-            result += INDENTATION + "Airline employee comps: " + Passengers.Count(p => p.Type == PassengerType.AirlineEmployee);
-            
-            result += VERTICAL_WHITE_SPACE;
-            result += "Total expected baggage: " + totalExpectedBaggage;
+        public void BaggageIncrement(IPassenger passenger)
+        {
+            if (!(passenger is IDiscounted discounted))
+                TotalExpectedBaggage++;
+        }
 
-            result += VERTICAL_WHITE_SPACE;
+        public void FlightProfitCalculator(IPassenger passenger)
+        {
+            if (passenger is IDiscounted discounted)
+                ProfitFromFlight += (FlightRoute.BasePrice / 2);
 
-            result += "Total revenue from flight: " + profitFromFlight;
-            result += NEW_LINE;
-            result += "Total costs from flight: " + costOfFlight;
-            result += NEW_LINE;
+            else if ((passenger is ILoyaltyPassenger loyaltyPassenger) && !((ILoyaltyPassenger)passenger).IsUsingLoyaltyPoints)
+                ProfitFromFlight += FlightRoute.BasePrice;
 
-            double profitSurplus = profitFromFlight - costOfFlight;
+            else if (!(passenger is IAirlineEmployee airlineEmployee))
+                ProfitFromFlight += FlightRoute.BasePrice;
+        }
 
-            result += (profitSurplus > 0 ? "Flight generating profit of: " : "Flight losing money of: ") + profitSurplus;
+        public void LoyaltyCalculations(IPassenger passedPassenger)
+        {
+            if (passedPassenger is ILoyaltyPassenger loyaltyPassenger)
+            {
+                var passenger = (ILoyaltyPassenger)passedPassenger;
 
-            result += VERTICAL_WHITE_SPACE;
+                if (passenger.IsUsingLoyaltyPoints)
+                {
+                    int loyaltyPointsRedeemed = Convert.ToInt32(Math.Ceiling(FlightRoute.BasePrice));
+                    passenger.LoyaltyPoints -= loyaltyPointsRedeemed;
+                    TotalLoyaltyPointsRedeemed += loyaltyPointsRedeemed;
+                    ProfitFromFlight -= FlightRoute.BasePrice;
+                }
+                else
+                {
+                    TotalLoyaltyPointsAccrued += FlightRoute.LoyaltyPointsGained;
+                }
 
-            result += "Total loyalty points given away: " + totalLoyaltyPointsAccrued + NEW_LINE;
-            result += "Total loyalty points redeemed: " + totalLoyaltyPointsRedeemed + NEW_LINE;
-
-            result += VERTICAL_WHITE_SPACE;
-
-            if (profitSurplus > 0 && 
-                seatsTaken < Aircraft.NumberOfSeats && 
-                seatsTaken / (double)Aircraft.NumberOfSeats > FlightRoute.MinimumTakeOffPercentage)
-                result += "THIS FLIGHT MAY PROCEED";
-            else
-                result += "FLIGHT MAY NOT PROCEED";
-
-            return result;
+                BaggageIncrement(passedPassenger);
+            }
         }
     }
 }
