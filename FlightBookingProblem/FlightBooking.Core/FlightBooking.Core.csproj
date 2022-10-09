@@ -42,8 +42,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FlightRules.cs" />
     <Compile Include="FlightReport.cs" />
     <Compile Include="FlightRoute.cs" />
+    <Compile Include="FlightRuleSet.cs" />
     <Compile Include="Passenger.cs" />
     <Compile Include="Plane.cs" />
     <Compile Include="ScheduledFlight.cs" />

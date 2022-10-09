@@ -6,15 +6,36 @@ namespace FlightBooking.Core
 {
     public class ScheduledFlight
     {
-        public ScheduledFlight(FlightRoute flightRoute)
+        public FlightRoute FlightRoute { get; private set; }
+        public IFlightRuleSet FlightRuleSet { get; private set; }
+        public Plane Aircraft { get; private set; }
+        public List<IPassenger> Passengers { get; private set; }
+        public int SeatsTaken => Passengers.Count;
+        public double CostOfFlights => FlightRoute.BaseCost * Passengers.Count;
+        public int TotalExpectedBaggage { get; set; }
+        public int TotalLoyaltyPointsRedeemed { get; set; }
+        public int TotalLoyaltyPointsAccrued { get; set; }
+        public double ProfitFromFlight { get; set; }
+        public int NoOfGeneralPassengers => Passengers.Count(p => p as IGeneralPassenger != null);
+        public int NoOfLoyaltyPassengers => Passengers.Count(p => p as ILoyaltyPassenger != null);
+        public int NoOfEmployeePassengers => Passengers.Count(p => p as IAirlineEmployee != null);
+        public int NoOfDiscountPassengers => Passengers.Count(p => p as IDiscounted != null);
+        public double ProfitSurplus => ProfitFromFlight - CostOfFlights;
+
+        public ScheduledFlight(FlightRoute flightRoute, IFlightRuleSet flightRules)
         {
             FlightRoute = flightRoute;
+            FlightRuleSet = flightRules;
             Passengers = new List<IPassenger>();
         }
 
-        public FlightRoute FlightRoute { get; private set; }
-        public Plane Aircraft { get; private set; }
-        public List<IPassenger> Passengers { get; private set; }
+        public bool DecisionToProceed
+        {
+            get
+            {
+                return FlightRuleSet.ClearedToProceed(this);
+            }
+        }
 
         public void AddPassenger(IPassenger passenger)
         {
@@ -24,77 +45,6 @@ namespace FlightBooking.Core
         public void SetAircraftForRoute(Plane aircraft)
         {
             Aircraft = aircraft;
-        }
-
-        public int SeatsTaken
-        {
-            get
-            {
-                return Passengers.Count;
-            }
-        }
-
-        public double CostOfFlights
-        {
-            get
-            {
-                return FlightRoute.BaseCost * Passengers.Count;
-            }
-        }
-
-        public int TotalExpectedBaggage { get; set; }
-        public int TotalLoyaltyPointsRedeemed { get; set; }
-        public int TotalLoyaltyPointsAccrued { get; set; }
-        public double ProfitFromFlight { get; set; }
-
-        public int NoOfGeneralPassengers
-        {
-            get
-            {
-                return Passengers.Count(p => p as IGeneralPassenger != null);
-            }
-        }
-
-        public int NoOfLoyaltyPassengers
-        {
-            get
-            {
-                return Passengers.Count(p => p as ILoyaltyPassenger != null);
-            }
-        }
-
-        public int NoOfEmployeePassengers
-        {
-            get
-            {
-                return Passengers.Count(p => p as IAirlineEmployee != null);
-            }
-        }
-
-        public int NoOfDiscountPassengers
-        {
-            get
-            {
-                return Passengers.Count(p => p as IDiscounted != null);
-            }
-        }
-
-        public double ProfitSurplus
-        {
-            get
-            {
-                return ProfitFromFlight - CostOfFlights;
-            }
-        }
-
-        public bool DecisionToProceed
-        {
-            get
-            {
-                return (ProfitSurplus > 0 &&
-                    SeatsTaken < Aircraft.NumberOfSeats &&
-                    SeatsTaken / (double)Aircraft.NumberOfSeats > FlightRoute.MinimumTakeOffPercentage);
-            }
         }
 
         public string GetSummary()

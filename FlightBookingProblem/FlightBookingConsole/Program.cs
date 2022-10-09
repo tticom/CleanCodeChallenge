@@ -73,7 +73,7 @@ namespace FlightBookingProblem
                 MinimumTakeOffPercentage = 0.7
             };
 
-            _scheduledFlight = new ScheduledFlight(londonToParis);
+            _scheduledFlight = new ScheduledFlight(londonToParis, new DefaultFlightRuleSet());
 
             _scheduledFlight.SetAircraftForRoute(
                 new Plane { Id = 123, Name = "Antonov AN-2", NumberOfSeats = 12 });

@@ -1,6 +1,5 @@
 using FlightBooking.Core;
 using System.Text.RegularExpressions;
-using Xunit;
 
 namespace FlightBooking.Test
 {
@@ -191,7 +190,7 @@ namespace FlightBooking.Test
                 MinimumTakeOffPercentage = 0.7
             };
 
-            TestFlight = new ScheduledFlight(TestRoute);
+            TestFlight = new ScheduledFlight(TestRoute, new DefaultFlightRuleSet());
 
             TestFlight.SetAircraftForRoute(
                     new Plane { Id = 123, Name = "Antonov AN-2", NumberOfSeats = 12 });
