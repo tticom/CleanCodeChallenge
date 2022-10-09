@@ -22,19 +22,13 @@ namespace FlightBooking.Core
         public int NoOfDiscountPassengers => Passengers.Count(p => p as IDiscounted != null);
         public double ProfitSurplus => ProfitFromFlight - CostOfFlights;
 
+        public bool DecisionToProceed => FlightRuleSet.ClearedToProceed(this);
+
         public ScheduledFlight(FlightRoute flightRoute, IFlightRuleSet flightRules)
         {
             FlightRoute = flightRoute;
             FlightRuleSet = flightRules;
             Passengers = new List<IPassenger>();
-        }
-
-        public bool DecisionToProceed
-        {
-            get
-            {
-                return FlightRuleSet.ClearedToProceed(this);
-            }
         }
 
         public void AddPassenger(IPassenger passenger)
